@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useReportDownload } from "@/hooks/useReportDownload";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { ResultCard } from "@/components/ResultCard";
@@ -11,6 +12,7 @@ import {
   Download,
   Loader2,
   AlertTriangle,
+  LayoutDashboard,
 } from "lucide-react";
 import type { PredictResponse } from "@/types/api";
 
@@ -146,6 +148,11 @@ export default function Results() {
   const [urgent, setUrgent] = useState(false);
   const [urgentReasons, setUrgentReasons] = useState<string[]>([]);
   const [disclaimer, setDisclaimer] = useState("");
+  const { downloadReport } = useReportDownload();
+  const handleExport = useCallback(() => {
+    const apiResult = location.state?.analysisResult;
+    if (apiResult) downloadReport(apiResult);
+  }, [location.state, downloadReport]);
 
   useEffect(() => {
     // Check if we have analysis results from the API
@@ -272,18 +279,38 @@ export default function Results() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 mb-8"
+            className="flex flex-col gap-3 mb-8"
           >
-            <Button variant="hero" asChild className="flex-1">
-              <Link to="/analyze">
-                <RotateCcw className="w-4 h-4" />
-                New Analysis
+            {/* ── Primary CTA: Patient Dashboard ── */}
+            <Button
+              asChild
+              className="w-full h-14 text-base font-bold rounded-xl shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, #1d4ed8 0%, #0891b2 100%)",
+                color: "white",
+              }}
+            >
+              <Link
+                to="/dashboard"
+                state={{ analysisResult: location.state?.analysisResult }}
+              >
+                <LayoutDashboard className="w-5 h-5 mr-2" />
+                View Patient-Friendly Dashboard
               </Link>
             </Button>
-            <Button variant="outline" className="flex-1">
-              <Download className="w-4 h-4" />
-              Export Report
-            </Button>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="hero" asChild className="flex-1">
+                <Link to="/analyze">
+                  <RotateCcw className="w-4 h-4" />
+                  New Analysis
+                </Link>
+              </Button>
+              <Button variant="outline" className="flex-1">
+                <Download className="w-4 h-4" />
+                Export Report
+              </Button>
+            </div>
           </motion.div>
 
           {/* Disclaimer */}
